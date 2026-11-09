@@ -1,1 +1,5 @@
-CRANE MART JAN商品名自動検索版\n既存のcrane_mart_v2形式と各端末内保存を維持。Open Food Facts / Open Products Facts / Open Beauty Factsを検索。商品名が見つからない場合は手入力。JAN番号のみ外部APIへ送信。価格自動取得なし。\n
+CRANE MART 精度改善 v3 / 2026-11-09
+保存キー crane_mart_v2 維持。
+改善: JANチェック数字検証、未発見時の国内Web検索補助、重複JAN防止、月グラフのタップ領域・キーボード操作、獲得数減算時に元の獲得価格を保持。
+国内商品名の完全自動取得はAPI認証情報が必要なため未搭載。既存のOpen Facts自動検索は維持。
+本体の保存は端末内localStorage。公開前にJSONバックアップを取得してください。
