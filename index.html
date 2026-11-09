@@ -46,6 +46,29 @@ async function domesticJanLookup(code){
   if(!response.ok)return null;const data=await response.json();return data&&data.jan===code?data:null;
  }catch{return null}finally{clearTimeout(timeout)}
 }
+// Explicit package quantities only. Capacity (185g/500ml) is not a count.
+function packUnits(name){
+ const t=String(name||'').normalize('NFKC');
+ const patterns=[/(?:入り数|入数|内容数|数量|本数)\s*[:：]?\s*(\d{1,3})\s*(?:本|缶|個|袋|枚)?/i,/(?:^|\s|[（(【])(?:計\s*)?(\d{1,3})\s*(?:本|缶|個|袋|枚)\s*(?:入|入り|セット|ケース|箱)?(?=\s|$|[）)】])/i,/[×xX＊*]\s*(\d{1,3})\s*(?:本|缶|個|袋|枚)?/i,/(\d{1,3})\s*(?:本|缶|個|袋|枚)\s*(?:入|入り|セット|ケース|箱)/i];
+ for(const re of patterns){const m=t.match(re);if(m){const n=Number(m[1]);if(Number.isInteger(n)&&n>=2&&n<=120)return n;}}
+ return null;
+}
+function cleanPackName(name){return String(name||'').replace(/\s*(?:入り数|入数|内容数|数量|本数)\s*[:：]?\s*\d{1,3}\s*(?:本|缶|個|袋|枚)?/gi,'').trim();}
+function packagePriceWidget(box,productName,domestic,code){
+ const units=packUnits(productName);
+ if(!units||!domestic||!Array.isArray(domestic.prices))return false;
+ // A marketplace offer must itself explicitly say the same quantity. Never divide an unrelated single-item price.
+ const matched=domestic.prices.filter(o=>packUnits(o.name)===units&&Number.isSafeInteger(o.price)&&o.price>0);
+ // Yahoo Worker v12 excludes packs, so this normally returns no matches; user can enter the verified box price.
+ const price=matched.length?Math.round(matched.map(o=>o.price).sort((a,b)=>a-b)[Math.floor((matched.length-1)/2)]):null;
+ const wrap=elt('div',undefined,'stat');wrap.style.marginTop='12px';
+ wrap.append(elt('strong','箱売り：'+units+'個入り → 1個単価に換算'));
+ const note=elt('p','箱価格を確認して入力してください。容量と入り数は別です。','muted');wrap.append(note);
+ const input=elt('input');input.type='number';input.min='1';input.step='1';input.placeholder='箱価格（税込・送料抜き）';input.style.marginTop='8px';if(price!=null)input.value=String(price);
+ const result=elt('p','箱価格を入力すると単価が表示されます。','muted');
+ const update=()=>{const raw=input.value.trim();const n=Number(raw);result.textContent=/^\d+$/.test(raw)&&Number.isSafeInteger(n)&&n>0?'1個あたり '+Math.round(n/units).toLocaleString('ja-JP')+'円（'+n.toLocaleString('ja-JP')+'円 ÷ '+units+'個）':'正しい箱価格を入力してください。';};input.addEventListener('input',update);update();
+ const b=btn('1個単価を登録欄に反映',()=>{const raw=input.value.trim(),n=Number(raw);if(!/^\d+$/.test(raw)||!Number.isSafeInteger(n)||n<=0)return alert('箱価格を正しく入力してください');if(!confirm(units+'個入り・箱価格'+n+'円から、1個'+Math.round(n/units)+'円で登録しますか？'))return;$('barcode').value=code;$('productName').value=cleanPackName(productName);$('productPrice').value=String(Math.round(n/units));$('scanMessage').textContent=units+'個入りの箱価格から1個単価を反映しました。商品名・数量を確認してください。';});b.style.marginTop='8px';wrap.append(input,result,b);box.append(wrap);return true;
+}
 let lookupSequence=0;
 async function productNameByJan(code){
  // Public Open Facts sources: these do not guarantee coverage of Japanese products.
@@ -78,18 +101,20 @@ async function lookup(){
   box.append(elt('strong',result.name),elt('p',result.category+'データベースの候補です。必ずパッケージと一致するか確認してください。','muted'));
   const use=btn('この商品名で登録する',()=>{$('barcode').value=code;$('productName').value=result.name;$('productName').focus();$('scanMessage').textContent='商品名を入力しました。必要なら修正し、価格を入力して「追加」を押してください。'});
   use.style.marginTop='8px';box.append(use);
+  const isPack=packUnits(result.name)!=null;
+  if(isPack)packagePriceWidget(box,result.name,domestic,code);
   if(domestic?.referenceListPrice!=null){box.append(elt('p','販売店が登録した参考定価：'+yen(domestic.referenceListPrice)+'（'+domestic.referenceListPriceSellers+'店舗で一致。メーカー公式価格として未確認）','muted'));}
-  if(domestic?.average!=null){
+  if(domestic?.average!=null&&!isPack){
    box.append(elt('p','国内'+domestic.count+'店舗の'+(domestic.count===1?'通販参考価格':'通販価格の中央値')+'：'+yen(domestic.average)+'（税込・送料除外）','muted'));
    box.append(btn('商品名と参考価格を登録欄に反映',()=>{$('barcode').value=code;$('productName').value=result.name;$('productPrice').value=String(domestic.average);$('scanMessage').textContent='通販参考価格を反映しました。店頭価格ではありません。商品名・容量・販売単位を確認してください。'}));
-  }else if(domestic){box.append(elt('p',domestic.note||'信頼できる価格が見つかりませんでした。Web検索か手入力をご利用ください。','muted'))}
+  }else if(domestic&&!isPack){box.append(elt('p',domestic.note||'信頼できる価格が見つかりませんでした。Web検索か手入力をご利用ください。','muted'))}
 
  }else{
   box.append(elt('strong','商品名が見つかりませんでした'),elt('p','JAN：'+code+' ／ 対応データベースに登録がないか、通信できません。手入力できます。','muted'));
   box.append(btn('商品名を手入力する',()=>{$('barcode').value=code;$('productName').focus();$('scanMessage').textContent='商品名を入力し「追加」を押してください。'}));
  }
  if(!result){const domestic=btn('国内の商品名をWeb検索',()=>window.open('https://www.google.com/search?q='+encodeURIComponent('\"'+code+'\" 商品名 JAN'),'_blank','noopener'));domestic.className='alt';domestic.style.marginTop='8px';box.append(domestic);}
- box.append(elt('p',domestic?.average!=null?'価格は通販参考値です。店頭価格ではありません。商品名・容量・販売単位を確認してください。':'平均価格が取得できない場合は、手入力または平均計算欄を利用してください。','muted'));
+ box.append(elt('p',packUnits(result?.name)?'箱売り商品は、確認した箱価格を入り数で割って単価を登録してください。Yahoo!の単品価格は箱価格として流用しません。':domestic?.average!=null?'価格は通販参考値です。店頭価格ではありません。商品名・容量・販売単位を確認してください。':'平均価格が取得できない場合は、手入力または平均計算欄を利用してください。','muted'));
 }
 // Price samples are local-only, not written into acquisition history until a product is registered.
 let calculatedAverage=null;
