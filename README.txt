@@ -1,6 +1,1 @@
-CRANE MART Android/iPhone JAN camera update
-既存の集計・日別・JAN機能は維持。Android Chrome/iPhone Safariでhtml5-qrcodeを利用します。
-保存先: 各端末のブラウザ localStorage。GitHub Pagesは保存先ではありません。クラウド同期なし。
-更新前にアプリの「集計」→「バックアップ保存」を実行してください。
-GitHub Pagesの既存リポジトリ nishijima-cyber/crane-mart のファイルを差し替えてください。
-実機での動作は未検証です。
+CRANE MART JAN商品名自動検索版\n既存のcrane_mart_v2形式と各端末内保存を維持。Open Food Facts / Open Products Facts / Open Beauty Factsを検索。商品名が見つからない場合は手入力。JAN番号のみ外部APIへ送信。価格自動取得なし。\n
