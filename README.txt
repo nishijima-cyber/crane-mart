@@ -1,7 +1,6 @@
-CRANE MART 品質改善版 / 2026-11-09
-既存保存キー crane_mart_v2 を維持。
-改善: 商品名修正、価格未設定時の確認、整数入力検証、プレイ削除確認、カメラ誤検出防止、バックアップ形式検証、商品名候補の注意表示。
-国内JANの自動取得率は公開データベースの収録状況に依存。Yahoo!ショッピングAPIはClient IDが必要なため未接続。
-実機・外部APIの成功率は未検証。
-
-【v4修正】旧版の数量マイナス履歴を含む、選択日の全獲得イベントを同じ単価に変更します。旧データを自動書き換えず、利用者が明示的に単価修正した場合のみ変更します。
+CRANE MART v8 safe single-unit average price candidate.
+Production not yet published. Worker URL preconfigured in index.html.
+Worker filters multipack listings conservatively and only computes an average across >=2 sellers.
+Run: node test-worker.mjs
+Read DEPLOY_CLAUDE.txt for staged rollout and live verification.
+LocalStorage key crane_mart_v2 is unchanged.
