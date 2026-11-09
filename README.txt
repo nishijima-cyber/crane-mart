@@ -1,6 +1,1 @@
-CRANE MART v8 safe single-unit average price candidate.
-Production not yet published. Worker URL preconfigured in index.html.
-Worker filters multipack listings conservatively and only computes an average across >=2 sellers.
-Run: node test-worker.mjs
-Read DEPLOY_CLAUDE.txt for staged rollout and live verification.
-LocalStorage key crane_mart_v2 is unchanged.
+CRANE MART v9: JAN単品候補が1店舗の場合は参考価格、2店舗以上なら平均価格を表示。0店舗は手入力。既存のローカル保存形式を維持。
