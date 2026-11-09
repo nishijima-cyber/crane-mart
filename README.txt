@@ -1,2 +1,1 @@
-CRANE MART v9: JAN単品候補が1店舗の場合は参考価格、2店舗以上なら平均価格を表示。0店舗は手入力。既存のローカル保存形式を維持。
-v10: Yahoo!通販価格のばらつきが大きい場合、自動価格反映を停止。店頭相場・メーカー希望小売価格は未取得。単品通販参考価格と明記。
+CRANE MART v12 price quality candidate. Median of eligible Yahoo single-item quotes; blocks widely dispersed online prices; seller-reported fixedPrice displayed separately as unverified reference list price. No claims of store shelf prices. No new API credentials. Deploy only after real tests.
